@@ -214,15 +214,92 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function editPlayer(event, player) {
-        const newName = prompt("Novo nome do jogador", player.name);
-        if (newName) {
-            player.name = newName;
-            nameTexts.filter(d => d.id === player.id).text(newName);
-        }
-        const newNumber = prompt("Novo número do jogador", player.number);
-        if (newNumber) {
-            player.number = newNumber;
-            numberTexts.filter(d => d.id === player.id).text(newNumber);
+        event.preventDefault(); // Previne o menu de contexto padrão
+    
+        // Detecta a interação por clique direito (desktop)
+        if (event.type === "contextmenu") {
+            // Evita o menu de contexto padrão
+            event.preventDefault(); // Impede a exibição do menu de contexto do navegador
+            showEditFields(player);
         }
     }
+    
+    // Função que exibe os campos de edição (nome e número)
+    function showEditFields(player) {
+        const playerGroup = d3.select(this); // Referência ao grupo do jogador clicado
+    
+        // Exibe o campo de edição para o nome do jogador
+        const nameInput = playerGroup.selectAll(".name-input")
+            .data([player])
+            .enter().append("foreignObject")
+            .attr("class", "name-input")
+            .attr("x", -30)
+            .attr("y", 25)
+            .attr("width", 60)
+            .attr("height", 20)
+            .append("xhtml:input")
+            .attr("type", "text")
+            .attr("value", player.name)
+            .style("width", "100%")
+            .style("font-size", "14px")
+            .on("blur", function() {
+                player.name = this.value;
+                playerGroup.select("text.name").text(player.name); // Atualiza o texto do nome
+                this.remove(); // Remove o campo de entrada após a edição
+            });
+    
+        // Exibe o campo de edição para o número do jogador
+        const numberInput = playerGroup.selectAll(".number-input")
+            .data([player])
+            .enter().append("foreignObject")
+            .attr("class", "number-input")
+            .attr("x", -10)
+            .attr("y", -15)
+            .attr("width", 30)
+            .attr("height", 20)
+            .append("xhtml:input")
+            .attr("type", "text")
+            .attr("value", player.number)
+            .style("width", "100%")
+            .style("font-size", "14px")
+            .on("blur", function() {
+                player.number = this.value;
+                playerGroup.select("text.number").text(player.number); // Atualiza o texto do número
+                this.remove(); // Remove o campo de entrada após a edição
+            });
+    }
+    
+    // Função para tratar a edição de jogadores (evento touch ou mouse)
+    function setupPlayerEvents() {
+        const playerGroups = svg.selectAll(".player")
+            .data(players)
+            .enter()
+            .append("g")
+            .attr("class", "player")
+            .attr("transform", d => `translate(${d.x}, ${d.y})`)
+            .call(
+                d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended)
+            );
+    
+        playerGroups
+            .on("contextmenu", function(event, player) {
+                // Chama a função de edição para o clique direito
+                editPlayer(event, player);
+            });
+    
+        playerGroups
+            .on("touchstart", function(event, player) {
+                const touchDuration = 1000; // 1 segundo de toque para ativar a edição
+                const timer = setTimeout(() => {
+                    // Inicia a edição após o toque longo
+                    showEditFields(player);
+                }, touchDuration);
+    
+                // Cancela o temporizador caso o toque seja liberado rapidamente
+                d3.select(this).on("touchend", () => clearTimeout(timer));
+            });
+    }    
 });
