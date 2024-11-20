@@ -214,14 +214,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function editPlayer(event, player) {
-        event.preventDefault(); // Previne o menu de contexto padrão
+        event.preventDefault(); // Previne o menu de contexto padrão em dispositivos PC
     
-        // Detecta a interação por clique direito (desktop)
-        if (event.type === "contextmenu") {
-            // Evita o menu de contexto padrão
-            event.preventDefault(); // Impede a exibição do menu de contexto do navegador
-            showEditFields(player);
-        }
+        showEditFields(player);
     }
     
     // Função que exibe os campos de edição (nome e número)
@@ -269,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
     
-    // Função para tratar a edição de jogadores (evento touch ou mouse)
+    // Função para configurar os eventos de edição de jogador (click ou touch)
     function setupPlayerEvents() {
         const playerGroups = svg.selectAll(".player")
             .data(players)
@@ -288,11 +283,15 @@ document.addEventListener("DOMContentLoaded", () => {
             .on("contextmenu", function(event, player) {
                 // Chama a função de edição para o clique direito
                 editPlayer(event, player);
+            })
+            .on("click", function(event, player) {
+                // Edição com clique simples (PC e Mobile)
+                editPlayer(event, player);
             });
     
         playerGroups
             .on("touchstart", function(event, player) {
-                const touchDuration = 1000; // 1 segundo de toque para ativar a edição
+                const touchDuration = 1000; // 1 segundo de toque longo para ativar edição
                 const timer = setTimeout(() => {
                     // Inicia a edição após o toque longo
                     showEditFields(player);
@@ -301,5 +300,5 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Cancela o temporizador caso o toque seja liberado rapidamente
                 d3.select(this).on("touchend", () => clearTimeout(timer));
             });
-    }    
+    }      
 });
