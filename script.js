@@ -214,20 +214,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function editPlayer(event, player) {
-        event.preventDefault(); // Previne o menu de contexto padrão em dispositivos PC
-    
-        showEditFields(player);
+        event.preventDefault(); // Previne o menu de contexto do navegador ao clicar com o botão direito
+        
+        // Verifica se o campo de entrada já está exibido
+        const playerGroup = d3.select(this);
+        
+        // Exibe ou atualiza os campos de edição (nome e número)
+        showEditFields(playerGroup, player);
     }
     
-    // Função que exibe os campos de edição (nome e número)
-    function showEditFields(player) {
-        const playerGroup = d3.select(this); // Referência ao grupo do jogador clicado
+    // Função para exibir ou atualizar os campos de edição (nome e número)
+    function showEditFields(playerGroup, player) {
+        // Remove campos de edição existentes, se houver
+        playerGroup.selectAll(".edit-input").remove();
     
-        // Exibe o campo de edição para o nome do jogador
-        const nameInput = playerGroup.selectAll(".name-input")
-            .data([player])
-            .enter().append("foreignObject")
-            .attr("class", "name-input")
+        // Cria o campo para editar o nome do jogador
+        const nameInput = playerGroup.append("foreignObject")
+            .attr("class", "edit-input")
             .attr("x", -30)
             .attr("y", 25)
             .attr("width", 60)
@@ -237,17 +240,15 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("value", player.name)
             .style("width", "100%")
             .style("font-size", "14px")
-            .on("blur", function() {
+            .on("blur", function() { // Atualiza o nome quando o campo perde o foco
                 player.name = this.value;
-                playerGroup.select("text.name").text(player.name); // Atualiza o texto do nome
-                this.remove(); // Remove o campo de entrada após a edição
+                playerGroup.select("text.name").text(player.name); // Atualiza o nome na visualização
+                this.remove(); // Remove o campo de edição após a alteração
             });
     
-        // Exibe o campo de edição para o número do jogador
-        const numberInput = playerGroup.selectAll(".number-input")
-            .data([player])
-            .enter().append("foreignObject")
-            .attr("class", "number-input")
+        // Cria o campo para editar o número do jogador
+        const numberInput = playerGroup.append("foreignObject")
+            .attr("class", "edit-input")
             .attr("x", -10)
             .attr("y", -15)
             .attr("width", 30)
@@ -257,14 +258,14 @@ document.addEventListener("DOMContentLoaded", () => {
             .attr("value", player.number)
             .style("width", "100%")
             .style("font-size", "14px")
-            .on("blur", function() {
+            .on("blur", function() { // Atualiza o número quando o campo perde o foco
                 player.number = this.value;
-                playerGroup.select("text.number").text(player.number); // Atualiza o texto do número
-                this.remove(); // Remove o campo de entrada após a edição
+                playerGroup.select("text.number").text(player.number); // Atualiza o número na visualização
+                this.remove(); // Remove o campo de edição após a alteração
             });
     }
     
-    // Função para configurar os eventos de edição de jogador (click ou touch)
+    // Configuração dos eventos para clicar com o botão direito
     function setupPlayerEvents() {
         const playerGroups = svg.selectAll(".player")
             .data(players)
@@ -279,26 +280,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     .on("end", dragended)
             );
     
+        // Evento para clique direito (PC)
         playerGroups
             .on("contextmenu", function(event, player) {
-                // Chama a função de edição para o clique direito
-                editPlayer(event, player);
-            })
-            .on("click", function(event, player) {
-                // Edição com clique simples (PC e Mobile)
-                editPlayer(event, player);
+                editPlayer(event, player); // Chama a função de edição ao clicar com o botão direito
             });
     
+        // Evento para clique normal (PC ou Mobile)
         playerGroups
-            .on("touchstart", function(event, player) {
-                const touchDuration = 1000; // 1 segundo de toque longo para ativar edição
-                const timer = setTimeout(() => {
-                    // Inicia a edição após o toque longo
-                    showEditFields(player);
-                }, touchDuration);
-    
-                // Cancela o temporizador caso o toque seja liberado rapidamente
-                d3.select(this).on("touchend", () => clearTimeout(timer));
+            .on("click", function(event, player) {
+                editPlayer(event, player); // Chama a função de edição ao clicar normalmente
             });
-    }      
+    }
+     
 });
